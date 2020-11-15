@@ -46,43 +46,43 @@ def main():
 
     print("Classifying captchas with symbol set {" + captcha_symbols + "}")
 
-    with tf.device('/cpu:0'):
-        with open(args.output, 'w') as output_file:
-            json_file = open(args.model_name+'.json', 'r')
-            loaded_model_json = json_file.read()
-            json_file.close()
 
-            tf_interpreter = tflite.Interpreter(args.model_name+".tflite")
-            tf_interpreter.allocate_tensors()
+    with open(args.output, 'w') as output_file:
+        json_file = open(args.model_name+'.json', 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
 
-            input_tf = tf_interpreter.get_input_details()
-            output_tf = tf_interpreter.get_output_details()
+        tf_interpreter = tflite.Interpreter(args.model_name+".tflite")
+        tf_interpreter.allocate_tensors()
 
-            # # model = keras.models.model_from_json(loaded_model_json)
-            # # model.load_weights(args.model_name+'.h5')
-            # # model.compile(loss='categorical_crossentropy',
-            # #               optimizer=keras.optimizers.Adam(1e-3, amsgrad=True),
-            #               metrics=['accuracy'])
+        input_tf = tf_interpreter.get_input_details()
+        output_tf = tf_interpreter.get_output_details()
 
-            for x in os.listdir(args.captcha_dir):
-                # load image and preprocess it
-                raw_data = cv2.imread(os.path.join(args.captcha_dir, x))
-                rgb_data = cv2.cvtColor(raw_data, cv2.COLOR_BGR2RGB)
-                image = numpy.array(rgb_data) / 255.0
-                (c, h, w) = image.shape
-                image = image.reshape([-1, c, h, w])
+        # # model = keras.models.model_from_json(loaded_model_json)
+        # # model.load_weights(args.model_name+'.h5')
+        # # model.compile(loss='categorical_crossentropy',
+        # #               optimizer=keras.optimizers.Adam(1e-3, amsgrad=True),
+        #               metrics=['accuracy'])
 
-                tf_interpreter.set_tensor(input_tf[0]['index'], image)
-                tf_interpreter.invoke()
-                prediction = []
-                for output_node in output_tf:
-                    prediction.append(tf_interpreter.get_tensor(output_node['index']))
+        for x in os.listdir(args.captcha_dir):
+            # load image and preprocess it
+            raw_data = cv2.imread(os.path.join(args.captcha_dir, x))
+            rgb_data = cv2.cvtColor(raw_data, cv2.COLOR_BGR2RGB)
+            image = numpy.array(rgb_data, dtype=numpy.float32) / 255.0
+            (c, h, w) = image.shape
+            image = image.reshape([-1, c, h, w])
 
-                prediction = numpy.reshape(prediction, (len(output_tf), -1))
+            tf_interpreter.set_tensor(input_tf[0]['index'], image)
+            tf_interpreter.invoke()
+            prediction = []
+            for output_node in output_tf:
+                prediction.append(tf_interpreter.get_tensor(output_node['index']))
 
-                output_file.write(x + ", " + decode(captcha_symbols, prediction) + "\n")
+            prediction = numpy.reshape(prediction, (len(output_tf), -1))
 
-                print('Classified ' + x)
+            output_file.write(x + ", " + decode(captcha_symbols, prediction) + "\n")
+
+            print('Classified ' + x)
 
 if __name__ == '__main__':
     main()
