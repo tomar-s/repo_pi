@@ -12,6 +12,7 @@ import random
 import argparse
 import tflite_runtime.interpreter as tflite
 
+
 def decode(characters, y):
     y = numpy.argmax(numpy.array(y), axis=1)
     return ''.join([characters[x] for x in y])
