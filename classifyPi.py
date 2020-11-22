@@ -80,7 +80,7 @@ def main():
 
             prediction = numpy.reshape(prediction, (len(output_tf), -1))
 
-            output_file.write(x + ", " + decode(captcha_symbols, prediction) + "\n")
+            output_file.write(x + "," + decode(captcha_symbols, prediction) + "\n")
 
             print('Classified ' + x)
 
